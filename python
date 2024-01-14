@@ -1,0 +1,3 @@
+Migrations for 'templates':
+  templates\migrations\0002_alter_person_options.py
+    - Change Meta options on person

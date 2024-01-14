@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add</title>
+</head>
+<body>
+    <h1>Добавить человека</h1>
+    <form method="post" action="/add_person/">
+        {%csrf_token%}
+        <p>Имя:<br> <input name="first_name" /></p>
+        <p>Фамилия:<br> <input name="last_name" /></p>
+        <p>Возраст:<br> <input name="age" type="number" /></p>
+        <p>Должность:<br> <input name="job" /></p>
+        <input type="submit" value="Добавить" />
+    </form>
+</body>
+</html>
