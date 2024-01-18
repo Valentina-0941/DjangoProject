@@ -1,0 +1,13 @@
+<html lang="en">
+<head>
+    <title>Vacancy List</title>
+</head>
+<body>
+<h2>Vacancy List</h2>
+<ul>
+    {% for vacancy in vacancies %}
+        <li>{{ vacancy.name }} - {{ vacancy.salary_from }} to {{ vacancy.salary_to }} {{ vacancy.salary_currency }}</li>
+    {% endfor %}
+</ul>
+</body>
+</html>
