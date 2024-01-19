@@ -6,7 +6,8 @@
 <h2>Vacancy List</h2>
 <ul>
     {% for vacancy in vacancies %}
-        <li>{{ vacancy.name }} ({{ vacancy.key_skills }}) - {{ vacancy.salary_from }} to {{ vacancy.salary_to }} {{ vacancy.salary_currency }}</li>
+        <li>{{ vacancy.name }} ({{ vacancy.key_skills }}) - {{ vacancy.salary_from }} to {{ vacancy.salary_to }}
+            {{ vacancy.salary_currency }} ({{ vacancy.course }})</li>
     {% endfor %}
 </ul>
 </body>

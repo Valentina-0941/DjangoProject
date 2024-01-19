@@ -44,33 +44,23 @@ def get_salary_dynamics():
         .filter(salary_from__isnull=False)  # Исключаем вакансии без указания зарплаты
         .annotate(year=ExtractYear('published_at'))  # Извлекаем год из даты публикации
         .values('year')
-        .annotate(average=Avg('salary_from'))
+        .annotate(average_salary=Avg('salary_from'), total_count=Count('salary_from'), course=Avg('course'))
         .order_by('year')
     )
 
     # Преобразуем данные в словарь для удобства использования в графике
-    result = {
-        entry['year']: {'average': round(entry['average'], 2)} for entry in salary_data
-    }
+    result = {}
+    for entry in salary_data:
+        year = entry['year']
+        average_salary = entry['average_salary']
+        course = entry['course']
+
+        # Умножаем среднюю зарплату на курс
+        if average_salary is not None and course is not None:
+            average_salary_rub = average_salary * course
+            result[year] = {'average': round(average_salary_rub, 2), 'total_count': entry['total_count']}
 
     return result
-
-
-def get_currency_rates():
-    # Получение данных о курсах валют с сайта Центробанка
-    url = 'https://www.cbr.ru/currency_base/daily/'
-    response = requests.get(url)
-    soup = BeautifulSoup(response.text, 'html.parser')
-
-    # Парсинг данных о курсах валют
-    currency_rates = {}
-    for row in soup.find_all('tr')[1:]:
-        columns = row.find_all('td')
-        currency_code = columns[1].text.strip()
-        rate = columns[4].text.strip()
-        currency_rates[currency_code] = float(rate.replace(',', '.'))
-
-    return currency_rates
 
 
 def generate_chart(salary_data):
@@ -99,10 +89,6 @@ def generate_chart(salary_data):
     else:
         return None
 
-
-def convert_currency(amount, currency, rates):
-    # Перевод суммы в рубли по курсу
-    return amount * rates[currency]
 
 
 def geography(request):
