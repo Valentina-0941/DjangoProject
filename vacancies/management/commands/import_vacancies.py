@@ -6,7 +6,6 @@ class Command(BaseCommand):
     help = 'Import vacancies from CSV file'
 
     def handle(self, *args, **options):
-        file_path = 'test.csv'
-        # profession_filter = ["разработчик игр", "gamedev", "game", "unity", "игр", "unreal"]
+        file_path = 'vacancies.csv'
         import_vacancies_from_csv(file_path)
         self.stdout.write(self.style.SUCCESS('Successfully imported vacancies'))

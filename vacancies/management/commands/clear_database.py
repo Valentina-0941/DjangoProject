@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from django.db import connections
+from vacancies.models import Vacancies
 from django.db.utils import OperationalError
 
 
@@ -8,9 +8,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         try:
-
-            with connections['default'].cursor() as cursor:
-                cursor.execute('DELETE FROM vacancies_vacancies')
+            # Очищаем все записи в модели Vacancies
+            Vacancies.objects.all().delete()
 
             self.stdout.write(self.style.SUCCESS('База данных успешно очищена.'))
         except OperationalError as e:
