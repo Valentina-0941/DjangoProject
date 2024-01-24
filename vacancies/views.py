@@ -6,8 +6,9 @@ from django.db.models.functions import ExtractYear
 from django.shortcuts import render
 from django.utils.dateparse import parse_datetime
 from django.http import JsonResponse
-from .models import Vacancies
+from .models import Vacancies, CurrencyRate
 from bs4 import BeautifulSoup
+from .demand import get_salary_dynamics, get_demand_data
 
 
 def vacancy_list(request):
@@ -15,55 +16,36 @@ def vacancy_list(request):
     return render(request, 'vacancies/vacancy_list.html', {'vacancies': vacancies})
 
 
+def courses_list(request):
+    courses = CurrencyRate.objects.all()
+    return render(request, 'vacancies/course_list.html', {'courses': courses})
+
+
 def index(request):
     return render(request, 'vacancies/index.html')
 
 
 def demand(request):
-    # Получаем данные для динамики зарплат
+
     salary_data = get_salary_dynamics()
+    salary_level_by_year = generate_chart(salary_data, 'Динамика уровня зарплат по годам')
+    table_salary_data = [{'year': year, 'average_salary': data['average']} for year, data in salary_data.items()]
 
-    # Генерируем график
-    chart = generate_chart(salary_data)
-
-    # Добавляем данные для таблицы в контекст
-    table_data = [{'year': year, 'average_salary': data['average']} for year, data in salary_data.items()]
+    number_vacancies = get_demand_data()
+    number_of_vacancies_by_year = generate_chart(number_vacancies, 'Динамика количества вакансий по годам')
+    table_number_vacancies = [{'year': year, 'average_salary': data['average']} for year, data in number_of_vacancies_by_year.items()]
 
     context = {
-        'chart': chart,
-        'table_data': table_data,
+        'salary_level_by_year': salary_level_by_year,
+        'table_salary_data': table_salary_data,
+        'number_of_vacancies_by_year': number_of_vacancies_by_year,
+        'table_number_vacancies': table_number_vacancies,
     }
 
     return render(request, 'vacancies/demand.html', context)
 
 
-def get_salary_dynamics():
-    # Используем агрегацию для вычисления средней зарплаты для каждого года
-    salary_data = (
-        Vacancies.objects
-        .filter(salary_from__isnull=False)  # Исключаем вакансии без указания зарплаты
-        .annotate(year=ExtractYear('published_at'))  # Извлекаем год из даты публикации
-        .values('year')
-        .annotate(average_salary=Avg('salary_from'), total_count=Count('salary_from'), course=Avg('course'))
-        .order_by('year')
-    )
-
-    # Преобразуем данные в словарь для удобства использования в графике
-    result = {}
-    for entry in salary_data:
-        year = entry['year']
-        average_salary = entry['average_salary']
-        course = entry['course']
-
-        # Умножаем среднюю зарплату на курс
-        if average_salary is not None and course is not None:
-            average_salary_rub = average_salary * course
-            result[year] = {'average': round(average_salary_rub, 2), 'total_count': entry['total_count']}
-
-    return result
-
-
-def generate_chart(salary_data):
+def generate_chart(salary_data, title):
     if salary_data:
         years = sorted(list(salary_data.keys()))
         averages = [salary_data[year]['average'] for year in years]
@@ -79,7 +61,7 @@ def generate_chart(salary_data):
                 'line': {'shape': 'linear'},
             }],
             'layout': {
-                'title': 'Динамика уровня зарплат по годам',
+                'title': title,
                 'xaxis': {'title': 'Год'},
                 'yaxis': {'title': 'Средняя зарплата (рубли)'},
             },
